@@ -90,19 +90,19 @@ User::checklogin();
       <div class="modal-body" class="form-group">
         <form action="index.php" method="POST">
           <label for="name">Name:</label>
-          <input type="name" name="name" id="name" placeholder="e.g. John Doe" class="form-control" required>
+          <input type="name" name="namereg" id="name" placeholder="e.g. John Doe" class="form-control" required>
           <br>
           <label for="email">Email:</label>
-          <input type="email" name="email" id="email" placeholder="e.g. john.doe@example.com" class="form-control" required>
+          <input type="email" name="emailreg" id="email" placeholder="e.g. john.doe@example.com" class="form-control" required>
           <br>
           <label for="password">Password:</label>
-          <input type="password" name="password" id="password" placeholder="Your new password" class="form-control" required>
+          <input type="password" name="passwordreg" id="password" placeholder="Your new password" class="form-control" required>
           <br>
 
   <div class="well">
         <div class="form-group">
         <label>Date of Birth</label>
-        <input type="date" name="birthday" class="form-control" id="dateofbirth" placeholder="Date of Birth">
+        <input type="date" name="birthdayreg" class="form-control" id="dateofbirth" placeholder="Date of Birth">
       </div>
   </div>
 
@@ -119,6 +119,14 @@ User::checklogin();
     </div>
   </div>
 </div>
+<?php
+if(isset($_POST['namereg']) and !empty($_POST['namereg']) and isset($_POST['emailreg']) and !empty($_POST['emailreg']) and isset($_POST['passwordreg']) and !empty($_POST['passwordreg']) and isset($_POST['birthdayreg']) and !empty($_POST['birthdayreg'])) {
+
+$user->Signup($_POST['namereg'], $_POST['emailreg'], $_POST['passwordreg'], $_POST['birthdayreg']);
+
+}
+
+ ?>
 <!-- End Sign Up Modal -->
 
 
