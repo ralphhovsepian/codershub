@@ -120,6 +120,7 @@ if($this->numRows > 0) {
 }
 
 
+
 public static function checklogin() {
 
   if(isset($_SESSION['id']) and !empty($_SESSION['id']) and isset($_SESSION['email']) and !empty($_SESSION['email'])) {
@@ -134,6 +135,8 @@ public static function checkiflogged() {
 if(!isset($_SESSION['id']) and empty($_SESSION['id']) and !isset($_SESSION['email']) and empty($_SESSION['email'])) {
   header('Location: ./index.php');
 
+} else {
+  $userid = $_SESSION['id'];
 }
 }
 
