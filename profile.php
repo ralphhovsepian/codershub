@@ -7,10 +7,7 @@ include './Classes/User.class.php';
 $user = new User;
 
 User::checkiflogged();
-
-
-
- ?>
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,14 +60,36 @@ User::checkiflogged();
 </nav>
 <!-- End Navbar -->
 
-<div id="profile" class="container">
 
+<!-- Start Profile Info -->
+
+<div id="profile" class="container">
 <img src="./assets/images/defautcover.jpg" class="imgA1 img-fluid rounded">
 <img src="./assets/images/default.png" class="imgB1 img-fluid img-thumbnail" width="200" height="200">
+<h5 class="name"><b><?php $user->getName($_SESSION['id']); ?></b></h5>
+<br><br>
+<div id="about">
+  <br>
+<h6><i class="fa fa-address-card" aria-hidden="true"></i><b> About</b></h6>
+
+<?php $user->getInfo($_SESSION['id']); ?>
+  
 </div>
+</div>
+<!-- End Profile Info -->
+
+
 
 
 <style>
+#about {
+  background-color: whitesmoke;
+  float: left;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-radius: 3px;
+
+}
 a {
   color: black !important;
 }
@@ -98,6 +117,12 @@ background-color: #dfe3ee !important;
 
 }
 
+.name {
+  position: absolute;
+    top: 380px;
+    left: 100px;
+    color: white;
+}
 </style>
 
 <script src="https://use.fontawesome.com/7fe550bc59.js"></script>
