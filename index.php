@@ -28,7 +28,6 @@ User::checklogin();
 
 
 
-
 <!-- Login/Signup Buttons Div Start-->
 <center>
 <div id="signupin" class="container">
@@ -57,8 +56,8 @@ User::checklogin();
           <input type="email" name="email" id="email" placeholder="e.g. john.doe@example.com" class="form-control" required>
           <br>
           <label for="password">Password:</label>
-          <input type="password" name="password" id="password" placeholder="Your password" class="form-control" required>
-
+          <input type="password" name="password" id="password" placeholder="Your password" class="form-control" required><br>
+          <a href="./forgot.php" style="color:blue;">Forgot Password</a>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

@@ -7,7 +7,7 @@ class Connection
 
   private $host = "localhost";
   private $username = "root";
-  private $password = "root";
+  private $password = "";
   private $db = "codershub";
   public $connection;
 
