@@ -28,34 +28,20 @@ User::checklogin();
 
 
 
-<!-- Forgot Password Form -->
-<div id="forgotform">
-<br>
-<h3>Reset your Password:</h3>
-<p>Sorry for your password loss! But hey, you could reset it by just entering your Email Address!</p>
-
-<form action="forgot.php" method="POST" class="form-group">
-<label for="email">Email Address:</label>
-          <input type="email" name="forgotemail" id="email" placeholder="e.g. john.doe@example.com" class="form-control" required>
-            <br>
-          <input type="submit" name="forgotsubmit" class="btn btn-primary btn-block" value="Reset Password">
-</form>
-</div>
-<!-- End Forgot Password Form -->
 
 
 <?php
 
-//Checking if email is isset and not empty
 
-if(isset($_POST['forgotemail']) and !empty($_POST['forgotemail'])) {
-  
-
-// calling the forgotpassword function
-$user->forgotpassword($_POST['forgotemail']);
+ 
+// Checks if Email , Password , and Token are isset
+if(isset($_GET['token']) and isset($_GET['email'])) {
 
 
-}
+
+$user->confirmEmail($_GET['token'], $_GET['email']);
+} 
+
 
 
 ?>
@@ -71,7 +57,6 @@ background-color: #dfe3ee !important;
 }
 
 </style>
-<!-- End Styling -->
 
 <script src="https://use.fontawesome.com/7fe550bc59.js"></script>
 <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
