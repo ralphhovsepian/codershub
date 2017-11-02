@@ -86,10 +86,15 @@ echo "<center>".$this->Data['progtype']."</center><br><br>
 
   public function Login($email, $password)
   	{
+
+  
+
       $this->email = htmlspecialchars(trim($email));
   		$this->password = $password;
 
-  		$this->sql = "SELECT `id`, `email`, `password` FROM `users` WHERE `email` = ?";
+      $this->Data = array();
+
+  		$this->sql = "SELECT `id`, `email`, `password`, `acttoken` FROM `users` WHERE `email` = ?";
   		$this->check = $this->connection->prepare($this->sql);
   		$this->check->bind_param('s', $this->email);
   		$this->check->execute();
@@ -98,15 +103,20 @@ echo "<center>".$this->Data['progtype']."</center><br><br>
       $this->total = $this->check->num_rows;
       		if ($this->total > 0) {
 
-            $this->check->bind_result($this->dbid, $this->dbemail, $this->dbpassword);
+            $this->check->bind_result($this->dbid, $this->dbemail, $this->dbpassword, $this->acttoken);
             $this->check->fetch();
             $this->check->close();
-
+          
       if (password_verify($this->password, $this->dbpassword)) {
+
+          if($this->acttoken == 0) {
               $_SESSION['id'] = $this->dbid;
               $_SESSION['email'] = $this->dbemail;
               $_SESSION['password'] = $this->dbpassword;
               header("Location: ./home.php");
+} else {
+ echo "<div class='alert alert-danger' role='alert'><strong>Error! </strong>Email Not Activated.</div>";
+}
             } else {
                     echo "<div class='alert alert-danger' role='alert'><strong>Error! </strong>Wrong Email or Password.</div>";
                   }
@@ -116,6 +126,10 @@ echo "<center>".$this->Data['progtype']."</center><br><br>
           }
 
       	}
+
+
+
+  
 
 
 /**
@@ -128,9 +142,9 @@ public function Signup($name, $email, $password, $birthday) {
   $this->email = htmlspecialchars(trim($email));
   $this->password = $password;
   $this->birthday = htmlspecialchars(trim($birthday));
-
   $this->password = password_hash($this->password, PASSWORD_DEFAULT);
-
+  $this->activationtoken = md5(uniqid(rand(), true));
+  $this->confirmeddefault = 0;
 
   $this->checkemail = self::checkEmail($this->email);
   $this->checkemailprov = self::emailprovider($this->email);
@@ -146,19 +160,110 @@ public function Signup($name, $email, $password, $birthday) {
 
 } else {
 
-  $this->RegisterSql = "INSERT INTO `users`(`name`, `email`, `password`, `birthday`) VALUES (?,?,?,?)";
+  $this->RegisterSql = "INSERT INTO `users`(`name`, `email`, `password`, `birthday`, `acttoken`, `confirmed`) VALUES (?,?,?,?,?,?)";
   $this->checkreg = $this->connection->prepare($this->RegisterSql);
-  $this->checkreg->bind_param('ssss', $this->name, $this->email, $this->password, $this->birthday);
+  $this->checkreg->bind_param('ssssss', $this->name, $this->email, $this->password, $this->birthday, $this->activationtoken, $this->confirmeddefault);
   $this->executereg = $this->checkreg->execute();
   $this->checkreg->close();
+
+
+    $this->Data = array();
+    $this->getacttokenquery = "SELECT `acttoken` FROM `users` WHERE `acttoken` = ? AND `email` = ?";
+    $this->getacttoken = $this->connection->prepare($this->getacttokenquery);
+    $this->getacttoken->bind_param('ii', $this->activationtoken, $this->email);
+    $this->getacttoken->execute();
+    $this->getacttoken->bind_result($this->acttoken);
+    $this->getacttoken->fetch();
+    $this->Data['acttoken'] = $this->acttoken;
+    $this->Data['email'] = $this->email;
+    $this->getacttoken->free_result();
+    $this->getacttoken->close();
+
+   
   if ($this->executereg) {
-    echo "<div class='alert alert-success' role='alert'>Account Created! You can now login.</div>";
-  } else {
- echo "<div class='alert alert-danger' role='alert'>An error has occured.</div>";
+
+
+$mail = new PHPMailer(true);                            
+try {
+    
+    $mail->isSMTP();                                    
+    $mail->Host = 'smtp.live.com'; 
+    $mail->SMTPAuth = true;                              
+    $mail->Username = 'youremail';                 
+    $mail->Password = 'yourpassword';                          
+    $mail->SMTPSecure = 'tls';                           
+    $mail->Port = 587;                                   
+
+   
+    $mail->setFrom('youremail', 'CodersHub');
+    $mail->addAddress($this->email);               
+    $mail->isHTML(true);                                
+    $mail->Subject = 'CodersHub Confirm Email';
+    $mail->Body    = "Hey! You have just created an account. Here is the link to confirm your Email.<br><br> 
+
+    <a href='localhost/codershub/confirm.php?token=$this->acttoken&email=$this->email'>Click here to activate your account</a>
+  
+    <br><br>
+    If you did not request that, Contact us immediately.";
+    
+
+    $mail->send();
+   echo "<div class='alert alert-success' role='alert'>Check your Email Address for the next steps.</div>";
+
+} catch (Exception $e) {
+    echo "<div class='alert alert-danger' role='alert'>Something Went Wrong. Make sure that you have written your email address correctly.</div>";
+    echo 'Mailer Error: ' . $mail->ErrorInfo;
 }
 
 
+
 }
+
+}
+}
+
+
+
+/**
+   * Activates Account
+   */
+
+
+public function confirmEmail($acttoken, $email) {
+
+$this->acttoken = $this->connection->real_escape_string(htmlentities($acttoken));
+$this->email = $this->connection->real_escape_string(htmlentities($email));
+
+$this->aftert = 0;
+$this->afterc = 1;
+
+$this->Data = array();
+$this->ConfirmEmailQuery = "SELECT `acttoken`, `email` FROM `users` WHERE `acttoken` = ? AND `email` = ?";
+$this->ConfirmEmail = $this->connection->prepare($this->ConfirmEmailQuery);
+$this->ConfirmEmail->bind_param('ii', $this->acttoken, $this->email);
+$this->ConfirmEmail->execute();
+$this->ConfirmEmail->bind_result($this->acttokendb, $this->emaildb);
+$this->ConfirmEmail->fetch();
+$this->Data['acttoken'] = $this->acttokendb;
+$this->Data['email'] = $this->emaildb;
+$this->ConfirmEmail->free_result();
+$this->ConfirmEmail->close();
+
+  
+if($this->email == $this->emaildb && $this->acttoken == $this->acttokendb && $this->acttoken != 0 && !empty($this->acttoken)) {
+
+    $this->UpdateToken = "UPDATE `users` SET `confirmed` = ?, `acttoken` = ? WHERE `email` = ?";
+  $this->checkupdatetoken = $this->connection->prepare($this->UpdateToken);
+  $this->checkupdatetoken->bind_param('sss', $this->afterc, $this->aftert, $this->email);
+  $this->executeupdatetoken = $this->checkupdatetoken->execute();
+  $this->checkupdatetoken->close();
+
+  echo "<div class='alert alert-success' role='alert'>Email Activated. You can now Login.</div>";
+
+} else {
+  echo "<div class='alert alert-danger' role='alert'>An Error has been occured.</div>";
+}
+
 
 }
 
@@ -171,7 +276,7 @@ public function Signup($name, $email, $password, $birthday) {
 
 public function forgotpassword($email) {
 
-  $this->email = $email;
+  $this->email = htmlspecialchars(trim($email));
   $this->token = md5(uniqid(rand(), true));
 
   $this->UpdateToken = "UPDATE `users` SET `resetpasstoken` = ? WHERE `email` = ?";
@@ -181,46 +286,31 @@ public function forgotpassword($email) {
   $this->checkupdatetoken->close();
 
 
-    $this->Data = array();
-    $this->gettokenquery = "SELECT `resetpasstoken` FROM `users` WHERE `email` = ?";
-    $this->gettoken = $this->connection->prepare($this->gettokenquery);
-    $this->gettoken->bind_param('i', $this->email);
-    $this->gettoken->execute();
-    $this->gettoken->bind_result($this->resetpasstoken);
-    $this->gettoken->fetch();
-    $this->Data['resetpasstoken'] = $this->resetpasstoken;
-    $this->gettoken->free_result();
-    $this->gettoken->close();
-
 
 
   if($this->executeupdatetoken) {
 
 
-$mail = new PHPMailer(true);                              // Passing `true` enables exceptions
+
+$mail = new PHPMailer(true);                              
 try {
-    //Server settings
-    $mail->isSMTP();                                      // Set mailer to use SMTP
-    $mail->Host = 'smtp.live.com'; //this is for hotmail  // Specify main and backup SMTP servers
-    $mail->SMTPAuth = true;                               // Enable SMTP authentication
-    $mail->Username = 'youremail';                 // SMTP username
-    $mail->Password = 'yourpassword';                           // SMTP password
-    $mail->SMTPSecure = 'tls';                            // Enable TLS encryption, `ssl` also accepted
-    $mail->Port = 587;                                    // TCP port to connect to
+    
+    $mail->isSMTP();                                      
+    $mail->Host = 'smtp.live.com'; 
+    $mail->SMTPAuth = true;                               
+    $mail->Username = 'youremail';                 
+    $mail->Password = 'yourpassword';                           
+    $mail->SMTPSecure = 'tls';                          
+    $mail->Port = 587;
 
-    //Recipients
+    
     $mail->setFrom('youremail', 'CodersHub');
-       // Add a recipient
-    $mail->addAddress($this->email);               // Name is optional
-  
-
-    $this->link = $this->Data['resetpasstoken'];
-    //Content
-    $mail->isHTML(true);                                  // Set email format to HTML
+    $mail->addAddress($this->email);
+    $mail->isHTML(true);                                 
     $mail->Subject = 'CodersHub Reset Password';
     $mail->Body    = "Hey! You just requested a password reset. Here is the code to reset your password.<br><br> 
 
-    Token: $this->link 
+    Token: $this->token
 
     <a href='localhost/codershub/reset.php'>Click here to reset your password</a>
   
@@ -247,8 +337,8 @@ try {
 
 public function TokenValidation($token, $email) {
 
-$this->token = $token;
-$this->email = $email;
+$this->token = $this->connection->real_escape_string(htmlentities($token));
+$this->email = $this->connection->real_escape_string(htmlentities($email));
 
 
     $this->Data = array();
@@ -267,13 +357,16 @@ $this->email = $email;
 }
 
 
+/**
+   * Resets Password
+   */
 
 public function ResettingPassword($emaill, $token, $password) {
 
-$this->password = $password; 
-$this->password = password_hash($this->password, PASSWORD_DEFAULT);
-$this->token = $token;
-$this->emaill = $emaill;
+$this->password = $password;
+$this->password = trim(password_hash($this->password, PASSWORD_DEFAULT));
+$this->token = $this->connection->real_escape_string(htmlentities($token));
+$this->emaill = $this->connection->real_escape_string(htmlentities($emaill));
 
 if($this->token == $this->Data['resetpasstoken'] && $this->token != 0 && !empty($this->token)) {
 
@@ -378,10 +471,10 @@ if(!isset($_SESSION['id']) and empty($_SESSION['id']) and !isset($_SESSION['emai
 }
 }
 
+
 /**
    * log out system
    */
-
 
 public static function logout() {
   session_destroy();
